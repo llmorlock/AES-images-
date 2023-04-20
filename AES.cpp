@@ -592,15 +592,17 @@ void char_to_bin(/*uchar dec[]*/vector<uchar>& dec, int binary[]) {
 
     //cout << "binary_rev is ";
     for (int i = 0; i < 16; i++) {
+        int end = 7;
         for (int j = 0; j < 8; j++) {
-            binary_rev_flat[(i * 8) + j] = binary_rev[i][j];
+            binary_rev_flat[(i * 8) + j] = binary_rev[i][end];
+            end--;
         }
     }
 
-    int end = 127;
+    //int end = 127;
     for (int i = 0; i < 128; i++) {
         binary[i] = binary_rev_flat[i];
-        end--;
+        //end--;
     }
 }
 
@@ -789,7 +791,7 @@ int main()
         ciphertext[i] = "";
     }*/
 
-    for (int c = 0; c < 1; c++) {
+    for (int c = 0; c < 3; c++) {
         cout << "**************CHANNEL 0" << c + 1 << "**************" << endl;
         int ttl_inp_remaining = ttl_pix;
 
@@ -865,14 +867,14 @@ int main()
             
 
             cout << "input hex is " << binary_to_hex(binary_input, 32) << endl;
-            /*cout << "input bin is ";
+            cout << "input bin is ";
             for (int i = 0; i < 128; i++) {
                 cout << binary_input[i];
                 if ((i+1) % 8 == 0) {
                     cout << " ";
                 }
             }
-            cout << endl;*/
+            cout << endl;
             
 
             // convert into 16 sections of 8 bits
@@ -906,7 +908,7 @@ int main()
                     cout << input_sections_bin[i][j];
                 }
             }*/
-            //key_addition(input_sections_bin, subkeys_sections[0]);
+            key_addition(input_sections_bin, subkeys_sections[0]);
             /*cout << "subkey sections is " << endl;
             for (int i = 0; i < 16; i++) {
                 for (int j = 0; j < 8; j++) {
@@ -922,10 +924,10 @@ int main()
             }*/
                         
 
-            for (int r = 0; r < 1; r++) {
+            for (int r = 0; r < 14; r++) {
                 //cout << "***ROUND " << r << "***" <<endl;
-                //byte_sub(input_sections_bin);
-                //shiftrow(input_sections_bin);
+                byte_sub(input_sections_bin);
+                shiftrow(input_sections_bin);
 
                 if (r != 14) {
                     //cout << "input sections is " << endl;
@@ -933,7 +935,7 @@ int main()
                     //    cout << binary_to_dec(input_sections_bin[i], 8) << " ";
                     //}
                     //cout << endl;
-                    mix_col(input_sections_bin);
+                    //mix_col(input_sections_bin);
                     //cout << "input sections is " << endl;
                     //for (int i = 0; i < 16; i++) {
                     //    cout << binary_to_dec(input_sections_bin[i], 8);
@@ -954,7 +956,7 @@ int main()
                     }
                 }
                 cout << endl;*/
-                //key_addition(input_sections_bin, subkeys_sections[r + 1]);
+                key_addition(input_sections_bin, subkeys_sections[r + 1]);
                 
 
                 /*cout << "subkey sections is " << endl;
@@ -1042,7 +1044,7 @@ int main()
             }
 
             // 14 rounds
-            for (int r = 0; r < 1; r++) {
+            for (int r = 0; r < 14; r++) {
                 /*cout << "cipher sections is " << endl;
                 for (int i = 0; i < 16; i++) {
                     for (int j = 0; j < 8; j++) {
@@ -1057,7 +1059,7 @@ int main()
                     }
                 }
                 cout << endl;*/
-                //key_addition(cipher_sections_bin, rev_subkeys_sections[r]);
+                key_addition(cipher_sections_bin, rev_subkeys_sections[r]);
                 /*cout << "xor result is " << endl;
                 for (int i = 0; i < 16; i++) {
                     for (int j = 0; j < 8; j++) {
@@ -1073,7 +1075,7 @@ int main()
                     //    }
                     //}
                     //cout << endl;
-                    mix_col(cipher_sections_bin, false);
+                    //mix_col(cipher_sections_bin, false);
                     //cout << "cipher sections is " << endl;
                     //for (int i = 0; i < 16; i++) {
                     //    for (int j = 0; j < 8; j++) {
@@ -1082,8 +1084,8 @@ int main()
                     //}
                     //cout << endl;
                 //}
-                //shiftrow(cipher_sections_bin, false);
-                //byte_sub(cipher_sections_bin, false);
+                shiftrow(cipher_sections_bin, false);
+                byte_sub(cipher_sections_bin, false);
             } // end of round for
             /*cout << "cipher sections is " << endl;
             for (int i = 0; i < 16; i++) {
@@ -1098,7 +1100,7 @@ int main()
                     cout << rev_subkeys_sections[14][i][j];
                 }
             }*/
-            //key_addition(cipher_sections_bin, rev_subkeys_sections[14]);
+            key_addition(cipher_sections_bin, rev_subkeys_sections[14]);
             /*cout << "xor result is " << endl;
             for (int i = 0; i < 16; i++) {
                 for (int j = 0; j < 8; j++) {
@@ -1115,6 +1117,15 @@ int main()
             }
 
             cout << "plaintext hex is " << binary_to_hex(plaintext_bin, 32) << endl;
+
+            cout << "plaintext bin is ";
+            for (int i = 0; i < 128; i++) {
+                cout << plaintext_bin[i];
+                if ((i + 1) % 8 == 0) {
+                    cout << " ";
+                }
+            }
+            cout << endl;
 
             uchar partial_plaintext[16];
             binary_to_char(plaintext_bin, partial_plaintext);
@@ -1133,35 +1144,35 @@ int main()
         
     } // end color channel for
 
-    //Mat cipher_channels_arr[3];
-    //for (int i = 0; i < 3; i++) {
-    //    cipher_channels_arr[i] = Mat(img.rows, img.cols, CV_8U, cipher_char[i].data());
-    //}
+    Mat cipher_channels_arr[3];
+    for (int i = 0; i < 3; i++) {
+        cipher_channels_arr[i] = Mat(img.rows, img.cols, CV_8U, cipher_char[i].data());
+    }
 
-    //Mat cipher_img;
-    //vector<Mat> cipher_channels = { cipher_channels_arr[0], cipher_channels_arr[1], cipher_channels_arr[2] };
-    //merge(cipher_channels, cipher_img);
-    //namedWindow("cipherimage", WINDOW_AUTOSIZE);
-    //imshow("cipherimage", cipher_img);
-    //int k = waitKey(0); // Wait for a keystroke in the window
-    //if (k == 's')
-    //{
-    //    imwrite("bmp_24_e.bmp", cipher_img);
-    //}
+    Mat cipher_img;
+    vector<Mat> cipher_channels = { cipher_channels_arr[0], cipher_channels_arr[1], cipher_channels_arr[2] };
+    merge(cipher_channels, cipher_img);
+    namedWindow("cipherimage", WINDOW_AUTOSIZE);
+    imshow("cipherimage", cipher_img);
+    int k = waitKey(0); // Wait for a keystroke in the window
+    if (k == 's')
+    {
+        imwrite("bmp_24_e.bmp", cipher_img);
+    }
 
-    //Mat decode_channels_arr[3];
-    //for (int i = 0; i < 3; i++) {
-    //    decode_channels_arr[i] = Mat(img.rows, img.cols, CV_8U, decode_char[i].data());
-    //}
+    Mat decode_channels_arr[3];
+    for (int i = 0; i < 3; i++) {
+        decode_channels_arr[i] = Mat(img.rows, img.cols, CV_8U, decode_char[i].data());
+    }
 
-    //Mat decode_img;
-    //vector<Mat> decode_channels = { decode_channels_arr[0], decode_channels_arr[1], decode_channels_arr[2] };
-    //merge(decode_channels, decode_img);
-    //namedWindow("decodeimage", WINDOW_AUTOSIZE);
-    //imshow("decodeimage", decode_img);
-    //int l = waitKey(0); // Wait for a keystroke in the window
-    //if (l == 's')
-    //{
-    //    imwrite("bmp_24_d.bmp", decode_img);
-    //}
+    Mat decode_img;
+    vector<Mat> decode_channels = { decode_channels_arr[0], decode_channels_arr[1], decode_channels_arr[2] };
+    merge(decode_channels, decode_img);
+    namedWindow("decodeimage", WINDOW_AUTOSIZE);
+    imshow("decodeimage", decode_img);
+    int l = waitKey(0); // Wait for a keystroke in the window
+    if (l == 's')
+    {
+        imwrite("bmp_24_d.bmp", decode_img);
+    }
 }

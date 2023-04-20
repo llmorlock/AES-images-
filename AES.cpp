@@ -86,7 +86,7 @@ void generate_subkeys(int[][256], int[]);
 void g_function(int[32], int);
 void key_addition(int[][8], int[][8]);
 void byte_sub(int[][8], bool);
-void shiftrow(int[][8]);
+void shiftrow(int[][8], bool);
 void mix_col(int[][8], bool);
 void key_reverse(int[][256], int[][256]);
 void hex_to_binary(string, int[]);
@@ -105,7 +105,7 @@ Mat get_img() {
     string imname;
     cin >> imname;
     if (imname == "d") {
-        imname = "bmp_24_s.bmp";
+        imname = "bmp_25_s.bmp";
     }
     string impath = samples::findFile(imname);
     Mat img = imread(impath, IMREAD_COLOR);
@@ -302,36 +302,69 @@ void byte_sub(int input_sections_bin[][8], bool forward=1) {
 /*
 * @param input_sections_bin the input broken into 16 8-bit sections
 */
-void shiftrow(int input_sections_bin[][8]) {
-    int temp4[8] = { 0 };
-    int temp8[8] = { 0 };
-    int temp9[8] = { 0 };
-    int temp15[8] = { 0 };
-    for (int i = 0; i < 8; i++) {
-        temp4[i] = input_sections_bin[4][i];
-        temp8[i] = input_sections_bin[8][i];
-        temp9[i] = input_sections_bin[9][i];
-        temp15[i] = input_sections_bin[15][i];
+void shiftrow(int input_sections_bin[][8], bool forward=1) {
+    if (forward) {
+        int temp4[8] = { 0 };
+        int temp8[8] = { 0 };
+        int temp9[8] = { 0 };
+        int temp15[8] = { 0 };
+        for (int i = 0; i < 8; i++) {
+            temp4[i] = input_sections_bin[4][i];
+            temp8[i] = input_sections_bin[8][i];
+            temp9[i] = input_sections_bin[9][i];
+            temp15[i] = input_sections_bin[15][i];
+        }
+
+        for (int i = 0; i < 8; i++) {
+            // 1 shift left
+            input_sections_bin[4][i] = input_sections_bin[5][i];
+            input_sections_bin[5][i] = input_sections_bin[6][i];
+            input_sections_bin[6][i] = input_sections_bin[7][i];
+            input_sections_bin[7][i] = temp4[i];
+
+            // 2 shifts left
+            input_sections_bin[8][i] = input_sections_bin[10][i];
+            input_sections_bin[9][i] = input_sections_bin[11][i];
+            input_sections_bin[10][i] = temp8[i];
+            input_sections_bin[11][i] = temp9[i];
+
+            // 3 shifts left
+            input_sections_bin[15][i] = input_sections_bin[14][i];
+            input_sections_bin[14][i] = input_sections_bin[13][i];
+            input_sections_bin[13][i] = input_sections_bin[12][i];
+            input_sections_bin[12][i] = temp15[i];
+        }
     }
+    else {
+        int temp7[8] = { 0 };
+        int temp8[8] = { 0 };
+        int temp9[8] = { 0 };
+        int temp12[8] = { 0 };
+        for (int i = 0; i < 8; i++) {
+            temp7[i] = input_sections_bin[7][i];
+            temp8[i] = input_sections_bin[8][i];
+            temp9[i] = input_sections_bin[9][i];
+            temp12[i] = input_sections_bin[12][i];
+        }
+        for (int i = 0; i < 8; i++) {
+            // 3 shifts left
+            input_sections_bin[7][i] = input_sections_bin[6][i];
+            input_sections_bin[6][i] = input_sections_bin[5][i];
+            input_sections_bin[5][i] = input_sections_bin[4][i];
+            input_sections_bin[4][i] = temp7[i];
 
-    for (int i = 0; i < 8; i++) {
-        // 1 shift left
-        input_sections_bin[4][i] = input_sections_bin[5][i];
-        input_sections_bin[5][i] = input_sections_bin[6][i];
-        input_sections_bin[6][i] = input_sections_bin[7][i];
-        input_sections_bin[7][i] = temp4[i];
+            // 2 shifts left
+            input_sections_bin[8][i] = input_sections_bin[10][i];
+            input_sections_bin[9][i] = input_sections_bin[11][i];
+            input_sections_bin[10][i] = temp8[i];
+            input_sections_bin[11][i] = temp9[i];
 
-        // 2 shifts left
-        input_sections_bin[8][i] = input_sections_bin[10][i];
-        input_sections_bin[9][i] = input_sections_bin[11][i];
-        input_sections_bin[10][i] = temp8[i];
-        input_sections_bin[11][i] = temp9[i];
-
-        // 3 shifts left
-        input_sections_bin[15][i] = input_sections_bin[14][i];
-        input_sections_bin[14][i] = input_sections_bin[13][i];
-        input_sections_bin[13][i] = input_sections_bin[12][i];
-        input_sections_bin[12][i] = temp15[i];
+            // 1 shift left
+            input_sections_bin[12][i] = input_sections_bin[13][i];
+            input_sections_bin[13][i] = input_sections_bin[14][i];
+            input_sections_bin[14][i] = input_sections_bin[15][i];
+            input_sections_bin[15][i] = temp12[i];
+        }
     }
     
 }
@@ -348,6 +381,14 @@ void mix_col(int input_sections_bin[][8], bool forward=1) {
         sections_dec[i] = binary_to_dec(input_sections_bin[i], 8);
     }
     
+    cout << "input sections are " << endl;
+    for (int i = 0; i < 16; i++) {
+        cout << sections_dec[i] << " ";
+        if ((i + 1) % 4 == 0) {
+            cout << endl;
+        }
+    }
+
     // transpose mtx
     int cols_dec[4][4] = {
         { sections_dec[0], sections_dec[4], sections_dec[8], sections_dec[12]},
@@ -355,6 +396,14 @@ void mix_col(int input_sections_bin[][8], bool forward=1) {
         { sections_dec[2], sections_dec[6], sections_dec[10], sections_dec[14]},
         { sections_dec[3], sections_dec[7], sections_dec[11], sections_dec[15]}
     };
+
+    cout << "transpose is " << endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            cout << cols_dec[i][j] << " ";
+        }
+        cout << endl;
+    }
 
     // multiply against public matrix
     if (forward == 1) {
@@ -368,11 +417,27 @@ void mix_col(int input_sections_bin[][8], bool forward=1) {
         }
     }
 
+    cout << "transpose result is " << endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            cout << cols_dec[i][j] << " ";
+        }
+        cout << endl;
+    }
+
     // ensure cell confined to 8 bits
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             cols_dec[i][j] %= 255;
         }
+    }
+
+    cout << "transpose mod result is " << endl;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            cout << cols_dec[i][j] << " ";
+        }
+        cout << endl;
     }
 
     // transpose mtx
@@ -382,6 +447,14 @@ void mix_col(int input_sections_bin[][8], bool forward=1) {
         cols_dec[0][2], cols_dec[1][2], cols_dec[2][2], cols_dec[3][2],
         cols_dec[0][3], cols_dec[1][3], cols_dec[2][3], cols_dec[3][3]
     };
+
+    cout << "result sections are " << endl;
+    for (int i = 0; i < 16; i++) {
+        cout << sections_dec2[i] << " ";
+        if ((i + 1) % 4 == 0) {
+            cout << endl;
+        }
+    }
 
     // transform sections to bin
     for (int i = 0; i < 16; i++) {
@@ -484,13 +557,15 @@ void dec_to_binary(int dec, int binary[]) {
 * @param charac "returns" the converted uchar array
 */
 void binary_to_char(int binary[], uchar charac[]) {
-    int dec[32] = { 0 };
+    int dec[16] = { 0 };
+    //int end = 15;
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 8; j++) {
             dec[i] += binary[(i * 8) + j] * int(pow(2, 8 - 1 - j));
         }
         charac[i] = (uchar)dec[i];
+        //end--;
     }
 }
 
@@ -501,10 +576,10 @@ void binary_to_char(int binary[], uchar charac[]) {
 void char_to_bin(/*uchar dec[]*/vector<uchar>& dec, int binary[]) {
     int r;
     int q;
-    int binary_rev[8][8] = { 0 };
-    int binary_rev_flat[64] = { 0 };
+    int binary_rev[16][8] = { 0 };
+    int binary_rev_flat[128] = { 0 };
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 8; j++) {
             //cout << "dec[i] is " << +dec[i] << endl;
             r = (int)dec[i] % 2;
@@ -516,16 +591,18 @@ void char_to_bin(/*uchar dec[]*/vector<uchar>& dec, int binary[]) {
     }
 
     //cout << "binary_rev is ";
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 16; i++) {
+        int end = 7;
         for (int j = 0; j < 8; j++) {
-            binary_rev_flat[(i * 8) + j] = binary_rev[i][j];
+            binary_rev_flat[(i * 8) + j] = binary_rev[i][end];
+            end--;
         }
     }
 
-    int end = 63;
-    for (int i = 0; i < 64; i++) {
+    //int end = 127;
+    for (int i = 0; i < 128; i++) {
         binary[i] = binary_rev_flat[i];
-        end--;
+        //end--;
     }
 }
 
@@ -661,12 +738,51 @@ int main()
         }
     }
 
+    /*cout << "orig b is " << endl;
+    for (int i = 0; i < img.rows; i++) {
+        for (int j = 0; j < img.cols; j++) {
+            cout << +bgr[0].at<uchar>(i, j) << "\t";
+        }
+        cout << endl;
+    }
+    cout << endl;*/
+
+    //cout << "channel b is ";
+    //for (int i = 0; i < img.cols; i++) {
+    //    cout << +bgr_cpy[0][i] << " ";
+    //}
+    //cout << endl;
+    //cout << "channel g is ";
+    //for (int i = 0; i < img.cols; i++) {
+    //    cout << +bgr_cpy[1][i] << " ";
+    //}
+    //cout << endl;
+    //cout << "channel r is ";
+    //for (int i = 0; i < img.cols; i++) {
+    //    cout << +bgr_cpy[2][i] << " ";
+    //}
+    //cout << endl << endl;
+
+    /*cout << "b orig is " << endl;
+    for (int i = 0; i < img.rows; i++) {
+        for (int j = 0; j < img.cols; j++) {
+            cout << +bgr[0].at<uchar>(i, j);
+        }
+    }
+    cout << endl << endl;
+
+    cout << "b copy is " << endl;
+    for (int i = 0; i < ttl_pix; i++) {
+        cout << +bgr_cpy[0][i];
+    }
+    cout << endl << endl;*/
+
     vector<vector<uchar>> cipher_char(3, vector<uchar>(ttl_pix));
     vector<vector<uchar>> decode_char(3, vector<uchar>(ttl_pix));
     
 
-    int num_blocks = ceil(ttl_pix / 32.0);
-    vector<vector<uchar>> input_arr(num_blocks, vector<uchar>(32));
+    int num_blocks = ceil(ttl_pix / 16.0);
+    vector<vector<uchar>> input_arr(num_blocks, vector<uchar>(16));
     cout << "num blocks is " << num_blocks << endl;
  /*   vector<string> input_arr(num_blocks);
     vector<string> ciphertext(num_blocks);
@@ -682,35 +798,83 @@ int main()
         cout << "filling blocks" << endl;
         // fill all blocks
         for (int k = 0; k < num_blocks; k++) {
-            if (ttl_inp_remaining <= 32) {
+            if (ttl_inp_remaining <= 16) {
                 for (int i = 0; i < ttl_inp_remaining; i++) {
-                    input_arr[k][i] = bgr_cpy[c][(8 * k) + i];
+                    input_arr[k][i] = bgr_cpy[c][(16 * k) + i];
                     //input_arr[k] += input[(32 * k) + i];
                 }
 
-                for (int i = ttl_inp_remaining; i < 32; i++) {
-                    input_arr[k][i] = '0';
+                for (int i = ttl_inp_remaining; i < 16; i++) {
+                    input_arr[k][i] = (uchar)0;
                     //input_arr[k] += '0';
                 }
             }
             else {
-                for (int i = 0; i < 32; i++) {
-                    input_arr[k][i] = bgr_cpy[c][(8 * k) + i];
+                for (int i = 0; i < 16; i++) {
+                    input_arr[k][i] = bgr_cpy[c][(16 * k) + i];
                     //input_arr[k] += input[(32 * k) + i];
                 }
-                ttl_inp_remaining -= 32;
+                /*if (k == 0) {
+                    cout << "block 0 orig is ";
+                    for (int i = 0; i < 32; i++) {
+                        cout << +bgr_cpy[c][(8 * k) + i] << " ";
+                    }
+                    cout << endl;
+                    cout << "block 0 copy is ";
+                    for (int i = 0; i < 32; i++) {
+                        cout << +input_arr[k][i] << " ";
+                    }
+                    cout << endl;
+                }*/
+                ttl_inp_remaining -= 16;
             }
         } // end of block fill for
         
+        /*cout << "b copy is " << endl;
+        for (int i = 0; i < ttl_pix; i++) {
+            cout << +bgr_cpy[0][i];
+        }
+        cout << endl << endl;
+
+        cout << "input_arr is " << endl;
+        for (int i = 0; i < num_blocks; i++) {
+            for (int j = 0; j < 32; j++) {
+                cout << +input_arr[i][j];
+            }
+        }
+        cout << endl << endl;*/
+
         for (int k = 0; k < num_blocks; k++) {
             cout << "got to enc" << endl;
             /********************** encrypt **********************/
             
+            /*cout << "orig char is ";
+            for (int i = 0; i < 32; i++) {
+                cout << +bgr_cpy[c][(32 * k) + i] << " ";
+            }
+            cout << endl;*/
+
+            cout << "input char is ";
+            for (int i = 0; i < 16; i++) {
+                cout << +input_arr[k][i] << " ";
+            }
+            cout << endl;
+
             // convert input to bin
             int binary_input[128] = { 0 };
             char_to_bin(input_arr[k], binary_input);
 
+            
+
             cout << "input hex is " << binary_to_hex(binary_input, 32) << endl;
+            cout << "input bin is ";
+            for (int i = 0; i < 128; i++) {
+                cout << binary_input[i];
+                if ((i+1) % 8 == 0) {
+                    cout << " ";
+                }
+            }
+            cout << endl;
             
 
             // convert into 16 sections of 8 bits
@@ -721,41 +885,61 @@ int main()
                 }
             }
 
-            // 14 rounds
-            key_addition(input_sections_bin, subkeys_sections[0]);
-            /*cout << "hex after first key add is ";
+            /*cout << "input sections is " << endl;
             for (int i = 0; i < 16; i++) {
-                cout << binary_to_hex(input_sections_bin[i], 2);
-                if (i == 3 || i == 7 || i == 11) {
-                    cout << " ";
+                for (int j = 0; j < 8; j++) {
+                    cout << input_sections_bin[i][j];
+                }
+            }
+            cout << endl;
+
+            cout << "subkey sections is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << subkeys_sections[0][i][j];
                 }
             }
             cout << endl;*/
 
+            // 14 rounds
+            /*cout << "input sections is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << input_sections_bin[i][j];
+                }
+            }*/
+            key_addition(input_sections_bin, subkeys_sections[0]);
+            /*cout << "subkey sections is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << subkeys_sections[0][i][j];
+                }
+            }
+            cout << endl;
+            cout << "xor result is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << input_sections_bin[i][j];
+                }
+            }*/
+                        
+
             for (int r = 0; r < 14; r++) {
                 //cout << "***ROUND " << r << "***" <<endl;
                 byte_sub(input_sections_bin);
-                /*cout << "hex after byte sub is ";
-                for (int i = 0; i < 16; i++) {
-                    cout << binary_to_hex(input_sections_bin[i], 2);
-                    if (i == 3 || i == 7 || i == 11) {
-                        cout << " ";
-                    }
-                }
-                cout << endl;*/
-
                 shiftrow(input_sections_bin);
-                /*cout << "hex after shiftrow is ";
-                for (int i = 0; i < 16; i++) {
-                    cout << binary_to_hex(input_sections_bin[i], 2);
-                    if (i == 3 || i == 7 || i == 11) {
-                        cout << " ";
-                    }
-                }
-                cout << endl;*/
 
                 if (r != 14) {
-                    mix_col(input_sections_bin);
+                    //cout << "input sections is " << endl;
+                    //for (int i = 0; i < 16; i++) {
+                    //    cout << binary_to_dec(input_sections_bin[i], 8) << " ";
+                    //}
+                    //cout << endl;
+                    //mix_col(input_sections_bin);
+                    //cout << "input sections is " << endl;
+                    //for (int i = 0; i < 16; i++) {
+                    //    cout << binary_to_dec(input_sections_bin[i], 8);
+                    //}
                     /*cout << "hex after mix col is ";
                     for (int i = 0; i < 16; i++) {
                         cout << binary_to_hex(input_sections_bin[i], 2);
@@ -765,12 +949,27 @@ int main()
                     }
                     cout << endl;*/
                 }
-                key_addition(input_sections_bin, subkeys_sections[r + 1]);
-                /*cout << "hex after key add is ";
+                /*cout << "input sections is " << endl;
                 for (int i = 0; i < 16; i++) {
-                    cout << binary_to_hex(input_sections_bin[i], 2);
-                    if (i == 3 || i == 7 || i == 11) {
-                        cout << " ";
+                    for (int j = 0; j < 8; j++) {
+                        cout << input_sections_bin[i][j];
+                    }
+                }
+                cout << endl;*/
+                key_addition(input_sections_bin, subkeys_sections[r + 1]);
+                
+
+                /*cout << "subkey sections is " << endl;
+                for (int i = 0; i < 16; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        cout << subkeys_sections[1][i][j];
+                    }
+                }
+                cout << endl;
+                cout << "xor result is " << endl;
+                for (int i = 0; i < 16; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        cout << input_sections_bin[i][j];
                     }
                 }
                 cout << endl;*/
@@ -790,21 +989,21 @@ int main()
             cout << endl;*/
             //cout << "ciphertext hex is " << binary_to_hex(ciphertext_bin, 32) << endl;
 
-            uchar partial_ciphertext[32];
+            uchar partial_ciphertext[16];
             binary_to_char(ciphertext_bin, partial_ciphertext);
             //ciphertext[k] = binary_to_hex(ciphertext_bin);
 
             cout << "ciphertext on k=" << k << "is ";
-            for (int i = 0; i < 32; i++) {
-                cout << +partial_ciphertext[i];
+            for (int i = 0; i < 16; i++) {
+                cout << +partial_ciphertext[i] << " ";
             }
             cout << endl;
 
 
             
-            for (int i = 0; i < 32; i++) {
-                if ((k * 32) + i < ttl_pix) {
-                    cipher_char[c][(k * 32) + i] = partial_ciphertext[i];
+            for (int i = 0; i < 16; i++) {
+                if ((k * 16) + i < ttl_pix) {
+                    cipher_char[c][(k * 16) + i] = partial_ciphertext[i];
                 }
             }
             //cout << "filled cipher_char" << endl;
@@ -846,14 +1045,68 @@ int main()
 
             // 14 rounds
             for (int r = 0; r < 14; r++) {
-                key_addition(cipher_sections_bin, rev_subkeys_sections[r]);
-                if (r != 0) {
-                    mix_col(cipher_sections_bin, false);
+                /*cout << "cipher sections is " << endl;
+                for (int i = 0; i < 16; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        cout << cipher_sections_bin[i][j];
+                    }
                 }
-                shiftrow(cipher_sections_bin);
+                cout << endl;
+                cout << "rev subkey sections is " << endl;
+                for (int i = 0; i < 16; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        cout << rev_subkeys_sections[13][i][j];
+                    }
+                }
+                cout << endl;*/
+                key_addition(cipher_sections_bin, rev_subkeys_sections[r]);
+                /*cout << "xor result is " << endl;
+                for (int i = 0; i < 16; i++) {
+                    for (int j = 0; j < 8; j++) {
+                        cout << cipher_sections_bin[i][j];
+                    }
+                }
+                cout << endl;*/
+                //if (r != 0) {
+                    //cout << "cipher sections is " << endl;
+                    //for (int i = 0; i < 16; i++) {
+                    //    for (int j = 0; j < 8; j++) {
+                    //        cout << cipher_sections_bin[i][j];
+                    //    }
+                    //}
+                    //cout << endl;
+                    //mix_col(cipher_sections_bin, false);
+                    //cout << "cipher sections is " << endl;
+                    //for (int i = 0; i < 16; i++) {
+                    //    for (int j = 0; j < 8; j++) {
+                    //        cout << cipher_sections_bin[i][j];
+                    //    }
+                    //}
+                    //cout << endl;
+                //}
+                shiftrow(cipher_sections_bin, false);
                 byte_sub(cipher_sections_bin, false);
             } // end of round for
+            /*cout << "cipher sections is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << cipher_sections_bin[i][j];
+                }
+            }
+            cout << endl;
+            cout << "rev subkey sections is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << rev_subkeys_sections[14][i][j];
+                }
+            }*/
             key_addition(cipher_sections_bin, rev_subkeys_sections[14]);
+            /*cout << "xor result is " << endl;
+            for (int i = 0; i < 16; i++) {
+                for (int j = 0; j < 8; j++) {
+                    cout << cipher_sections_bin[i][j];
+                }
+            }*/
 
             // flatten plaintext array
             int plaintext_bin[128] = { 0 };
@@ -863,16 +1116,29 @@ int main()
                 }
             }
 
-            cout << "plaintext hex is " << binary_to_hex(plaintext_bin, 32) << endl << endl;
+            cout << "plaintext hex is " << binary_to_hex(plaintext_bin, 32) << endl;
 
-            uchar partial_plaintext[32];
-            binary_to_char(plaintext_bin, partial_plaintext);
-
-            for (int i = 0; i < 32; i++) {
-                if ((k * 32) + i < ttl_pix) {
-                    decode_char[c][(k * 32) + i] = partial_plaintext[i];
+            cout << "plaintext bin is ";
+            for (int i = 0; i < 128; i++) {
+                cout << plaintext_bin[i];
+                if ((i + 1) % 8 == 0) {
+                    cout << " ";
                 }
             }
+            cout << endl;
+
+            uchar partial_plaintext[16];
+            binary_to_char(plaintext_bin, partial_plaintext);
+
+            cout << "partial plaintext is ";
+            for (int i = 0; i < 16; i++) {
+                //cout << (k * 16) + i << " ";
+                if ((k * 16) + i < ttl_pix) {
+                    cout << +partial_plaintext[i] << " ";
+                    decode_char[c][(k * 16) + i] = partial_plaintext[i];
+                }
+            }
+            cout << endl << endl;
 
         } // end of num_blocks for
         
